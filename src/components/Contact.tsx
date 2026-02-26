@@ -2,7 +2,7 @@ export default function Contact() {
   return (
     <section id="contact" className="py-24 px-6">
       <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-4">Let's Connect</h2>
+        <h2 className="text-3xl font-bold mb-4">Let&apos;s Connect</h2>
         <p className="text-gray-400 mb-8">Open to opportunities, feel free to reach out.</p>
         <a href="mailto:thesaadster.dev@gmail.com"
           className="bg-white text-black px-8 py-3 rounded-lg font-medium hover:bg-gray-200 transition inline-block">
