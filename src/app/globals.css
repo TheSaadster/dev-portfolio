@@ -3,25 +3,77 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cobalt: #2a36e8;
+  --ink: #0b0d22;
+  --ink-2: #14173a;
+  --paper: #f4f1e8;
+  --signal: #ffd84a;
+  --haze: #a3a9dc;
+  --line: rgba(244, 241, 232, 0.14);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--cobalt);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--paper);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Lenis (smooth scroll) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Chess It Up walkthrough: Projects.tsx adds .is-pinned on desktop, where the
+   steps stack on top of each other and scroll swaps them. Without it they are
+   a plain list. */
+.stage.is-pinned {
+  height: 100svh;
+}
+.stage.is-pinned .beat {
+  position: absolute;
+  inset: 0;
+}
+
+/* Card highlight that follows the cursor (--mx / --my set in Projects.tsx) */
+.spotlight {
+  background-image: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(255, 216, 74, 0.13),
+    transparent 60%
+  );
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-wave {
+    animation: none;
   }
 }

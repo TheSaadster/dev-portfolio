@@ -1,71 +1,105 @@
 "use client";
-import { motion } from "framer-motion";
+
+// Hero: the headline on the left, the 3D scene (HeroScene) behind it. The
+// text layer ignores the pointer except on its links, so the canvas underneath
+// still gets hover and click.
+
+import dynamic from "next/dynamic";
+import { useMemo, useRef, useState } from "react";
+import { gsap, SplitText, reducedMotion, useIso } from "@/lib/gsap";
+import { scrollToId } from "@/lib/scroll";
+import type { ThingId } from "./HeroScene";
+
+const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
+
+const THINGS: Record<ThingId, { label: string; target: string }> = {
+  chess: { label: "Chess It Up, 2 million users", target: "projects" },
+  youtube: { label: "My YouTube channel", target: "youtube" },
+  voice: { label: "Voice AI Assistant", target: "voice-ai" },
+};
 
 export default function Hero() {
-  return (
-    <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.18) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.07]"
-        style={{
-          backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
+  const root = useRef<HTMLElement>(null);
+  const scroll = useMemo(() => ({ p: 0 }), []);
+  const [running, setRunning] = useState(true);
+  const [still, setStill] = useState(false);
+  const [hovered, setHovered] = useState<ThingId | null>(null);
 
-      <div className="relative max-w-2xl text-center z-10">
-        <motion.p
-          className="text-sm font-medium tracking-widest text-indigo-400 uppercase mb-4"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          Full-Stack Developer
-        </motion.p>
-        <motion.h1
-          className="text-5xl sm:text-6xl font-bold mb-5 tracking-tight"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          Hey, I&apos;m Saad
-        </motion.h1>
-        <motion.p
-          className="text-lg text-gray-400 mb-10 leading-relaxed"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          Building web apps with React, Next.js, TypeScript &amp; AWS.
+  useIso(() => {
+    const reduced = reducedMotion();
+    setStill(reduced);
+    const ctx = gsap.context(() => {
+      // drives the scene's lift-off and pauses rendering once the hero is gone
+      gsap.to(scroll, {
+        p: 1, ease: "none",
+        scrollTrigger: {
+          trigger: root.current, start: "top top", end: "bottom top", scrub: true,
+          onToggle: (self) => setRunning(self.isActive),
+        },
+      });
+      if (reduced) return;
+
+      const chars = SplitText.create(".hero-h1", { type: "words,chars" }).chars;
+      gsap.timeline({ delay: 0.15, defaults: { ease: "power3.out" } })
+        .from(".hero-eyebrow", { autoAlpha: 0, y: 12, duration: 0.6 })
+        .from(chars, { autoAlpha: 0, yPercent: 60, rotate: 6, duration: 0.8, stagger: 0.035 }, "-=0.3")
+        .from(".hero-rest", { autoAlpha: 0, y: 24, duration: 0.7, stagger: 0.1 }, "-=0.45");
+
+      gsap.to(".hero-copy", {
+        yPercent: -18, autoAlpha: 0, ease: "none",
+        scrollTrigger: { trigger: root.current, start: "top top", end: "70% top", scrub: true },
+      });
+    }, root);
+    return () => ctx.revert();
+  }, [scroll]);
+
+  return (
+    <section id="top" ref={root} className="relative h-[100svh] min-h-[620px] overflow-hidden">
+      <div className="absolute inset-0">
+        <HeroScene
+          scroll={scroll}
+          running={running}
+          still={still}
+          onHover={setHovered}
+          onPick={(id) => scrollToId(THINGS[id].target)}
+        />
+      </div>
+
+      <div className="hero-copy pointer-events-none relative h-full max-w-6xl mx-auto px-6 flex flex-col justify-end md:justify-center pb-28 md:pb-0">
+        <p className="hero-eyebrow font-mono text-xs uppercase tracking-[0.25em] text-signal mb-5">
+          Full-stack developer
+        </p>
+        <h1 className="hero-h1 font-display font-extrabold tracking-[-0.04em] leading-[0.9] text-[clamp(3.4rem,11vw,9.5rem)]">
+          Hey, I&apos;m
           <br />
-          I also make YouTube videos about development.
-        </motion.p>
-        <motion.div
-          className="flex gap-4 justify-center flex-wrap"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
+          Saad.
+        </h1>
+        <p className="hero-rest mt-7 max-w-md text-lg leading-relaxed text-paper/85">
+          I build web apps with React, Next.js and TypeScript. I also make YouTube videos
+          about development.
+        </p>
+        <div className="hero-rest mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
           <a
             href="#projects"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-medium transition"
+            className="pointer-events-auto bg-signal text-ink font-semibold px-6 py-3.5 rounded-full hover:bg-paper transition-colors"
           >
-            View Projects
+            See my work
           </a>
           <a
             href="#about"
-            className="border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white px-6 py-3 rounded-lg font-medium transition"
+            className="pointer-events-auto font-medium underline decoration-paper/40 underline-offset-[6px] hover:decoration-signal transition-colors"
           >
-            About Me
+            About me
           </a>
-        </motion.div>
+        </div>
       </div>
+
+      <p
+        aria-live="polite"
+        className="pointer-events-none hidden md:block absolute right-6 bottom-20 font-mono text-xs uppercase tracking-widest text-paper/70"
+      >
+        {hovered ? `${THINGS[hovered].label} →` : "Click one to jump to it"}
+      </p>
     </section>
   );
 }
